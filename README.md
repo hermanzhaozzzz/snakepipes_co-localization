@@ -1,32 +1,5 @@
 # snakepipes_cutadapt-HISAT2mapping-FPKM-sortBAM
 
-```
-# step 3: bigwig compute matrix(CPM and RPKM)
-
-# step 4: matrix matrix plot heatmap(CPM and RPKM)
-
-
-
-
-# 293T plot 
-# {PLOT_HEATMAP} --perGroup \
-# -m deeptools_result/20200620-293T-ATACSeq_and_DNaseSeq-DetectSeq_regions.matrix.mat.gz \
-# -out deeptools_result/20200620-293T-ATACSeq_and_DNaseSeq.heatmap.pdf \
-# --regionsLabel \
-# DetectSeq.Out \
-# DetectSeq.Target \
-# DetectSeq.NoOutOrTarget \
-# DetectSeq.All \
-# Genome.random \
-# CasOFFinder.EMX1 \
-# CasOFFinder.VEGFA \
-# CasOFFinder.HEK4 &
-```
-
-
-
-
-
 
 
 

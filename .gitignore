@@ -14,7 +14,7 @@
 # Rstudio history
 **/.Rhistory
 # macos meta
-**/.DS_Store/
+**/.DS_Store
 **/.Trash/
 
 # snakemake configure
