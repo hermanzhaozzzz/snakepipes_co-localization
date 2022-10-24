@@ -10,42 +10,45 @@ mysql \
 	-e "select chrom, size from hg38.chromInfo" \
 	> hg38.genome
 
-# ------------------------------------------------------------------->>>>>>>>>>
-# step 1
-#     generate random region
-
-# -l	The length of the intervals to generate.
-#		- Default = 100.
-# ------------------------------------------------------------------->>>>>>>>>>
 # generate random bed
 bedtools random -seed 20221023 \
-	-l 180 \
-	-n 100 \
+	-l 200 \
+	-n 10000 \
 	-g hg38.genome \
-	> random_l-180_n-100_hg38.bed
+	> random_hg38.bed
+	# -l	The length of the intervals to generate.
 
 # get all region to test
 cp ../bed/ENCFF285QVL_CTCF_binding_sites_fix_range.bed all_find_region.bed 
 
 # 去掉random region中偶然落在需要 test 的 region 中的 region
 bedtools intersect \
-	-a random_l-180_n-100_hg38.bed \
+	-a random_hg38.bed \
 	-b all_find_region.bed -loj | \
 	awk -F '\t' '{if( $8==-1 ){print $1"\t"$2"\t"$3}}'| \
-	grep -v "_" > random_l-180_n-100_hg38_minus-test.bed
+	grep -v "_" > random_hg38_minus-test.bed
 
 ########注意！check有没有带N的序列，带N的序列都不要了，到setect_region.ipyn中check 序列信息
 bedtools getfasta \
-	-bed random_l-180_n-100_hg38_minus-test.bed \
+	-bed random_hg38_minus-test.bed \
 	-fi ~/Bio/1.database/db_genomes/genome_fa/genome_ucsc_hg38/genome_ucsc_hg38.fa \
-	> random_l-180_n-100_hg38_minus-test.fa
+	> random_hg38_minus-test.fa
 
 bioat_fastatools filter_n \
-	-i random_l-180_n-100_hg38_minus-test.fa |\
+	-i random_hg38_minus-test.fa |\
 	grep ">" |\
 	awk '{sub(/>/,""); sub(/:/, "\t"); sub(/-/, "\t"); print $0}' |\
 	bedtools sort |\
-	> random_l-180_n-100_hg38_final.bed
+	> random_hg38_final.bed
+
+# clean temp file
+rm random_hg38.bed random_hg38_minus-test.bed random_hg38_minus-test.fa
+
+
+# ------------------------------------------------------------------->>>>>>>>>>
+# step 2
+#     generate matrix
+# ------------------------------------------------------------------->>>>>>>>>>
 
 
 computeMatrix reference-point \
@@ -63,20 +66,48 @@ computeMatrix reference-point \
 ../bed/ctcf_low.bed \
 ../bed/ctcf_middle.bed \
 ../bed/ctcf_high.bed \
+random_hg38_final.bed \
 -o ../RPKM.out.mat.gz \
 --referencePoint center \
 --beforeRegionStartLength 2000 \
 --afterRegionStartLength 2000 \
 --skipZeros \
---binSize 10 \
+--binSize 50 \
 --samplesLabel \
-ATP8-DddAwt_REP-1 \
-ATP8-DddA6_REP-1 \
-ATP8-DddA11_REP-1 \
-JAK2-DddA11_REP-1 \
-SIRT6-DddA11_REP-1 \
-293T-DdCBE-ND5.1-All-PD_rep2 \
-293T-DdCBE-ND6-All-PD_rep2 \
+ATP8-DddAwt-1 \
+ATP8-DddA6-1 \
+ATP8-DddA11-1 \
+JAK2-DddA11-1 \
+SIRT6-DddA11-1 \
+ND5.1-DddAwt-2 \
+ND6-DddAwt-2 \
 Vector
 
+
+# ------------------------------------------------------------------->>>>>>>>>>
+# step 3
+#     plot heatmap
+# ------------------------------------------------------------------->>>>>>>>>>
+# plot coverage and heatmap
+# base on region and legend on sample
+plotHeatmap -m ../RPKM.out.mat.gz \
+	-out coverage.heatmap.base-on-region.pdf \
+	--colorList white,lightblue,purple \
+	--dpi 200 --heatmapHeight 40 --heatmapWidth 4 \
+	--regionsLabel CTCF-all CTCF-low CTCF-middle CTCF-high Random \
+	--plotTitle "Coverage distribution of Whole genome sequencing" \
+	--perGroup \
+	--legendLocation upper-left
+	# --zMax 45
+
+# plot coverage 
+# base on sample and legend on region
+plotHeatmap -m ../RPKM.out.mat.gz \
+	-out coverage.heatmap.base-on-sample.pdf \
+	--plotType=fill \
+	--colorList white,lightblue,purple \
+	--dpi 200 --heatmapHeight 13 --heatmapWidth 8 \
+	--regionsLabel CTCF-all CTCF-low CTCF-middle CTCF-high Random \
+	--plotTitle "Coverage distribution of Whole genome sequencing"
+	# --zMax 45
 
